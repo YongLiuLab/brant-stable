@@ -180,6 +180,7 @@ for mm = 1:numel(split_prefix)
             
             if (ext_mean_ind == 1)
                 brant_write_csv(fullfile(out_ts{1}, [subj_ids{m}, '_ts.csv']), num2cell(ts_rois));
+                brant_write_txt(fullfile(out_ts{1}, [subj_ids{m}, '_ts.txt']), num2cell(ts_rois));
             end
             
             if (roi2roi_ind == 1)                
