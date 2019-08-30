@@ -11,11 +11,11 @@ function varargout = brant(Action)
 % National Lab of Pattern Recognition (NLPR),
 % Institute of Automation,
 % Chinese Academy of Sciences (IACAS), China.
-% BRANT Home page: http://www.brainnetome.org/en/brainnetometool.html
+% BRANT Home page: http://brant.brainnetome.org/
 % Fast Update Version: https://github.com/kbxu/brant
 % $Mail    = yliu@nlpr.ia.ac.cn;
-% $Version = 3.28;
-% $Release = 20170823;
+% $Version = 3.36;
+% $Release = 20190327;
 % *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 Hbrant = findobj(0,'Type','figure','Tag','figBRANT');     % get figure handles
@@ -42,7 +42,7 @@ switch upper(Action)
     case {'PREPROCESS','PREP'}
         brant_preprocess;
 
-    case {'FC', 'SPON', 'UTILITY', 'STAT', 'NET', 'VIEW', 'EMBEDDED'}
+    case {'FC', 'SPON', 'UTILITY', 'STAT', 'NET', 'VIEW', 'THIRD PARTY'}
         brant_postprocess(upper(Action));
         
     case 'QUIT'
@@ -59,7 +59,7 @@ switch upper(Action)
         fprintf('\tBye for now...\n');
 
     case {'ABOUT', 'ABOUTBRANT'}  % help documents
-        web('http://www.brainnetome.org/en/brainnetometool.html', '-browser');
+        web('http://brant.brainnetome.org/', '-browser');
 
     case 'MAIL' % mail to author
         web('mailto:yliu@nlpr.ia.ac.cn');
@@ -99,7 +99,7 @@ fprintf('*  Brainnetome Center: <a href = "http://www.brainnetome.org">http://ww
 fprintf('*  National Lab of Pattern Recognition(NLPR)\n');
 fprintf('*  Institute of Automation,\n');
 fprintf('*  Chinese Academy of Sciences(CASIA), China\n');
-fprintf('*  <a href = "http://www.brainnetome.org/en/brainnetometool.html">Homepage</a> <a href = "https://github.com/kbxu/brant">GitHub</a>\n')
+fprintf('*  <a href = "http://brant.brainnetome.org/">Homepage</a> <a href = "https://github.com/kbxu/brant">GitHub</a>\n')
 fprintf('*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\n\n');
 
 set(0,'Units','pixels');
@@ -153,7 +153,7 @@ btnOpt = {...
     'NET',              [120 46 60 25];...
     'STAT',             [195 46 60 25];...
     'View',             [120 8  60 25];...
-    'Embedded',            [15  8  90 25];...
+    'Third Party',            [15  8  90 25];...
     'Quit',             [195 8  60 25]};
 
 h_btn = zeros(size(btnOpt, 1), 1);

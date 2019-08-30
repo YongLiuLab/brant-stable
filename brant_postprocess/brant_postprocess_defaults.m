@@ -1,4 +1,5 @@
 function [process_pars, ui_structs, process_fun] = brant_postprocess_defaults(process_str)
+% see case 'circos' as example of adding new functions
 
 brant_path = fileparts(which('brant'));
 
@@ -14,6 +15,7 @@ end
 switch(lower(process_str))
     case 'circos'
         
+        % at first search where is circos binary if possible
         circos_dir = '';
         if (ispc == 1)
             [ret, str] = system('where circos.exe');
@@ -25,6 +27,7 @@ switch(lower(process_str))
             circos_dir = fileparts(str);
         end
         
+        % required default parameters, fields are the third column in ui_structs
         process_pars.circos_dir = {circos_dir};
         process_pars.conf_dir = {fullfile(brant_path, 'circos')};
         process_pars.roi_info = {''};
@@ -35,6 +38,8 @@ switch(lower(process_str))
         process_pars.transparent_bkg = 0;
         process_pars.out_dir = {''};
         
+        % each row in ui_structs represents a set of GUI elements that combined for one input
+        % {ui style}, {ui string displayed}, {ui as one field in the struct passed to porcess_fun's first parameter}, {other ui parameters}
         ui_structs = {...
             {'edit', 'str_dir'},     'circos dir',     {'circos_dir'},      '';...
             {'edit', 'str_dir'},     'conf dir',    {'conf_dir'},              '';...
@@ -46,6 +51,7 @@ switch(lower(process_str))
             {'edit', 'str_dir'},     'out dir',     {'out_dir'},      '';...
             };
         
+        % process_fun ties to the actual script that receives process_pars as its first parameter
         process_fun = @brant_circos_conf;
     
     case 'normalise'
@@ -203,15 +209,17 @@ switch(lower(process_str))
         
     case 'tsnr'
         process_pars.out_dir = {''};
+        process_pars.thres = 30;
         
         ui_structs = {...
             {'sub_gui', 'disp_dirs_nii_mask'},      'input_nifti',       {{'filetype', 'wra*.nii'}},              '';...
+            {'edit', 'num_short_right'},      'threshold (?)',    {'thres'},              '';...
             {'edit', 'str_dir'},     'out dir',     {'out_dir'},      '';...
             };
         
         process_fun = @brant_tsnr;
         
-    case {'draw roi'}
+    case {'draw rois'}
         process_pars.sphere = 1;
         process_pars.cube = 0;
         process_pars.mm = 1;
@@ -254,8 +262,8 @@ switch(lower(process_str))
         ui_structs = {...
             {'radio', 'hor_txt'},   'operation',               {{'merge', 'extract'}},                          '';...
             {'edit', 'str_nifti'},       'roi file',   {'rois'},                 '';...
-            {'edit', 'str_edge'},       'roi info*',    {'roi_info'},              '';...
-            {'edit', 'num_longest'},       'roi index',    {'roi_vec'},              '';...
+            {'edit', 'str_edge'},       'roi index*',    {'roi_info'},              '';...
+            {'edit', 'num_longest'},       'roi vector',    {'roi_vec'},              '';...
             {'chb', 'num_bin'},          'output to single file',   {'out2single'},                          '';...
             {'sub_gui', 'stat_3d_nifti_mask'},      'input_nifti',       {{'mask', '', 'disable'}},              '';...
             {'edit', 'str_long_left'},     'out fn',     {'out_fn'},      '';...
@@ -294,7 +302,7 @@ switch(lower(process_str))
         
         process_fun = @brant_extract_mean;
         
-    case {'roi calculation'}
+    case {'roi signal calculation'}
         process_pars.roi_wise = 1;
         ...process_pars.vox_wise = 0;
         process_pars.ext_mean = 1;
@@ -590,7 +598,7 @@ switch(lower(process_str))
         
         process_pars.alpha = 1.0;
         process_pars.rad_mm = [];
-        process_pars.surface = {fullfile(brant_path, 'brant_surface', 'standard_withCC.txt')};
+        process_pars.surface = {fullfile(brant_path, 'brant_surface', 'standard.txt')};
         process_pars.vol_map = {bn_atlas};
         
         process_pars.material_type = 'shiny';
@@ -599,11 +607,13 @@ switch(lower(process_str))
         process_pars.mode_display = 'halves:left and right';
         process_pars.vol_thr = 'vol ~= 0';
         process_pars.colorbar = 1;
+        process_pars.clip_colorbar = 0;
         process_pars.discrete = 1;
         
         ui_structs = {...
             {'chb', 'num_bin'},       'show colorbar',         {'colorbar'},             '';...
-            {'chb', 'num_bin'},       'discrete value',         {'discrete'},             '';...
+            {'chb', 'num_bin'},       'clip colorbar',         {'clip_colorbar'},             '';...
+            {'chb', 'num_bin'},       'discrete value (for templates)',         {'discrete'},             '';...
             {'edit', 'num_short_left'},      'alpha',    {'alpha'},              '';...
             {'edit', 'num_short_right'},      'max val radius(mm)',    {'rad_mm'},              '';...
             {'popupmenu', 'disp_view_opts'},      'display',    {{{'mode_display'};'halves:left lateral';'halves:left medial';'halves:right lateral';'halves:right medial';'halves:left and right';'whole brain:sagital left';'whole brain:sagital right';'whole brain:axial superior';'whole brain:axial inferior';'whole brain:coronal anterior'; 'whole brain:coronal posterior'}},              '';... 
@@ -622,7 +632,7 @@ switch(lower(process_str))
         process_pars.alpha = 0.3;
         process_pars.disp_surface = 1;
         process_pars.disp_legend = 0;
-        process_pars.surface = {fullfile(brant_path, 'brant_surface', 'standard_withCC.txt')};
+        process_pars.surface = {fullfile(brant_path, 'brant_surface', 'standard.txt')};
         process_pars.rois = {bn_atlas};
         process_pars.roi_vec = [31,32];
         process_pars.roi_info = {bn_atlas_info};
@@ -646,8 +656,8 @@ switch(lower(process_str))
             {'edit', 'str_surf'},      'surface',    {'surface'},              '';...
             {'chb', 'num_bin'},        'display legend',   {'disp_legend'},                          '';...
             {'edit', 'str_nifti'},       'roi file',   {'rois'},                 '';...
-            {'edit', 'str_edge'},       'roi info*',    {'roi_info'},              '';...
-            {'edit', 'num_longest'},       'roi vals',    {'roi_vec'},              '';...
+            {'edit', 'str_edge'},       'roi index*',    {'roi_info'},              '';...
+            {'edit', 'num_longest'},       'roi vector',    {'roi_vec'},              '';...
             ...{'chb', 'num_bin_num_edit'},       'spin&save',         {'spin_angle'},             '';...
             {'radio', 'hor_txt'}, 'color',               {{'random', 'input'}},                          '';...
 %             {'radio', 'vert_two'}, {'random color', 'input color'},               {'rand_color', 'input_color'},                          '';...
@@ -659,7 +669,7 @@ switch(lower(process_str))
         process_fun = @brant_roi_mapping;
         
     case 'network visualization'
-        process_pars.surface = {fullfile(brant_path, 'brant_surface', 'standard_withCC.txt')};
+        process_pars.surface = {fullfile(brant_path, 'brant_surface', 'standard.txt')};
         process_pars.alpha = 0.2;
         process_pars.mode_display = 'whole brain:axial superior';
         process_pars.node_txt = {''};

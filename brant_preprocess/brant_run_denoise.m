@@ -1,9 +1,10 @@
-function end_prefix = brant_run_denoise(wk_dir, denoise_infos, data_files, subj_fns, is4d_ind, outdirs)
+function end_prefix = brant_run_denoise(wk_dir, denoise_infos, data_files, subj_fns, is4d_ind, outdirs, nm_pos)
 % wk_dir: working directory (to save temporary and log files)
 % denoise_infos: items of denoise, exported from GUI
 % data_files: N*1 cell array of full path filenames
 % subj_fns: N*1 cell array of subject ids
 % is4d_ind: 0 or 1, whether input file is arranged in 4D
+% name position of input directories
 % outdirs: N*1 cell array of output directories, leave empty to export
 % files to original data directories.
 
@@ -48,7 +49,7 @@ R_ind = (denoise_infos.reg_mdl.regressors.R == 1) | (denoise_infos.reg_mdl.regre
 
 % find motion files
 if R_ind
-    motion_files = batch_search_files(subj_paths, denoise_infos.space_mask.ft_motion, 1, 1);
+    motion_files = batch_search_files(subj_paths, denoise_infos.space_mask.ft_motion, nm_pos, 1);
 else
     motion_files = [];
 end
@@ -67,7 +68,7 @@ if ~T_ind % is false, no tissue used, set other tissue ind to false (will not ch
 end
 
 %% check masks validity and copy to working directory (only for common space case)
-[mask_files, mask_info, mask_thrs] = check_masks(wk_dir, subj_paths, denoise_infos.space_mask);
+[mask_files, mask_info, mask_thrs] = check_masks(wk_dir, subj_paths, denoise_infos.space_mask, nm_pos);
 
 wb_img_ind = [];
 gs_img_ind = [];
@@ -318,24 +319,30 @@ mask_info_raw = {'whole brain mask'; 'global signal mask'; 'white matter mask'; 
 mask_inds = cellfun(@(x) find(strcmpi(x, mask_info)), mask_info_raw, 'UniformOutput', false);
 
 % load masks
-wb_img_ind = load_mask_to_ind(mask_files{1}, mask_inds(1), mask_thrs(1));
-gs_img_ind = load_mask_to_ind(mask_files{2}, mask_inds(2), mask_thrs(2));
-wm_img_ind = load_mask_to_ind(mask_files{3}, mask_inds(3), mask_thrs(3));
-csf_img_ind = load_mask_to_ind(mask_files{4}, mask_inds(4), mask_thrs(4));  
+wb_img_ind = load_mask_to_ind(mask_inds{1}, mask_files, mask_thrs);
+gs_img_ind = load_mask_to_ind(mask_inds{2}, mask_files, mask_thrs);
+wm_img_ind = load_mask_to_ind(mask_inds{3}, mask_files, mask_thrs);
+csf_img_ind = load_mask_to_ind(mask_inds{4}, mask_files, mask_thrs);
 
 if ~isempty(wb_img_ind)
-    gs_img_ind = gs_img_ind & wb_img_ind;
-    wm_img_ind = wm_img_ind & wb_img_ind;
-    csf_img_ind = csf_img_ind & wb_img_ind;
+    if ~isempty(gs_img_ind)
+        gs_img_ind = gs_img_ind & wb_img_ind;
+    end
+    if ~isempty(wm_img_ind)
+        wm_img_ind = wm_img_ind & wb_img_ind;
+    end
+    if ~isempty(csf_img_ind)
+        csf_img_ind = csf_img_ind & wb_img_ind;
+    end
 end
 
-function mask_img_ind = load_mask_to_ind(mask_file, mask_ind, thr)
+function mask_img_ind = load_mask_to_ind(mask_ind, mask_file, thr)
 
 if isempty(mask_ind)
     mask_img_ind = [];
 else
-    mask_nii = load_untouch_nii_mod(mask_file);
-    mask_img_ind = mask_nii.img > thr;
+    mask_nii = load_untouch_nii_mod(mask_file{mask_ind});
+    mask_img_ind = mask_nii.img > thr(mask_ind);
 end
 
 function mask_files_res = reslice_masks(data_files, ref_hdrs, mask_files, mask_res_type)
@@ -362,7 +369,7 @@ for m = 1:numel(mask_files)
     end
 end
 
-function [mask_files, mask_info, mask_thrs] = check_masks(wk_dir, subj_paths, mask_opt)
+function [mask_files, mask_info, mask_thrs] = check_masks(wk_dir, subj_paths, mask_opt, nm_pos)
 % check masks validity
 
 mask_files = {};
@@ -402,7 +409,7 @@ else
     
     if any(mask_inds)
         mask_strs = cellfun(@(x) mask_opt.(x).string, mask_fields, 'UniformOutput', false);
-        mask_files_tmp = cellfun(@(x) batch_search_files(subj_paths, x, 1, 1), mask_strs(mask_inds), 'UniformOutput', false);
+        mask_files_tmp = cellfun(@(x) batch_search_files(subj_paths, x, nm_pos, 1), mask_strs(mask_inds), 'UniformOutput', false);
         mask_files = arrayfun(@(x) [mask_files_tmp{1}(x); mask_files_tmp{2}(x); mask_files_tmp{3}(x); mask_files_tmp{4}(x)],...
                                     1:numel(subj_paths), 'UniformOutput', false);
         mask_thrs = cellfun(@(x) mask_opt.(x).thr, mask_fields(mask_inds));

@@ -45,12 +45,16 @@ end
 % else
 %     vq = interp3(X, Y, Z, vol_int, vertices_coord(:, 1), vertices_coord(:, 2), vertices_coord(:, 3), 'Nearest');
 % end
+
+thres_str = strrep(colorinfo.vol_exp, 'vol', 'vol_int');
+vol_int = vol_int .* eval(thres_str);
+
 vq = interp3(X, Y, Z, vol_int, vertices_coord(:, 1), vertices_coord(:, 2), vertices_coord(:, 3), 'Nearest');
 
-% max_abs = max(abs(vq(:)));
-thres_str = strrep(colorinfo.vol_exp, 'vol', 'vq');
-vol_3d_mask = eval(thres_str);
-vq(~vol_3d_mask) = 0;
+% % max_abs = max(abs(vq(:)));
+% thres_str = strrep(colorinfo.vol_exp, 'vol', 'vq');
+% vol_3d_mask = eval(thres_str);
+% vq(~vol_3d_mask) = 0;
     
 % min_vq = min(setdiff(vq, 0));
 % max_vq = max(setdiff(vq, 0));
@@ -61,12 +65,21 @@ max_abs = max(abs(vol_int(:)));
 if (colorinfo.discrete == 0)
     
     color_N = 129;
-    c_map = jet(color_N);
-    c_map(49:65, 3) = 1;
-    c_map(49:65, 1) = linspace(0, 1, 17);
-    c_map(65:82,1) = 1;
-    c_map(65:82,3) = linspace(1, 0, 18);
     
+%     negative_clip = 40;
+    c_map_pos = hot(fix(color_N/2));
+    c_map = [c_map_pos(:,3:-1:1); ones(1, 3); c_map_pos(end:-1:1,:)];
+    
+    
+%     clip = 17;
+%     color_N_half = ceil((color_N + 1) / 4);
+%     c_map = winter(color_N);
+%     c_map((color_N_half - clip):color_N_half, 3) = 1;
+%     c_map((color_N_half - clip):color_N_half, 1) = linspace(0, 1, clip+1);
+%     c_map(color_N_half:(color_N_half + clip), 1) = 1;
+%     c_map(color_N_half:(color_N_half + clip), 3) = linspace(1, 0, clip+1);
+    
+%     c_map = c_map / 2;
 %     unmask below one line if you want to visualize positive color in blue
 %     c_map=c_map(end:-1:1,:);
 
@@ -74,6 +87,7 @@ if (colorinfo.discrete == 0)
 %     lin_cmap_pos = linspace(0, max_abs, floor(color_N / 2) + 1);
 
     thr = max_abs / color_N * 20;
+%     thr = 1e-2;
     
     if (min_vq > 0)
         % only positive
@@ -98,6 +112,12 @@ if (colorinfo.discrete == 0)
         % set maximum positive to inf to white
         if (tick_cbr(end)+1) <= color_N
             c_map(tick_cbr(end)+1:end, :) = 1;
+        end
+        
+        if colorinfo.clip_colorbar == 1
+            idx = sum(c_map, 2) < 3;
+            c_map_pos_clip = hot(sum(idx));
+            c_map(idx, :) = c_map_pos_clip(end:-1:1, :);
         end
             
         cbr.xtick = interp1(linspace(-1*max_abs, max_abs, color_N), 1:color_N, tick_vec, 'Nearest');
@@ -127,10 +147,17 @@ if (colorinfo.discrete == 0)
         if tick_cbr(1)-1 >= 1
             c_map(1:tick_cbr(1)-1, :) = 1;
         end
+        
+        if colorinfo.clip_colorbar == 1
+            idx = sum(c_map, 2) < 3;
+            c_map_pos_clip = hot(sum(idx));
+            c_map(idx, :) = c_map_pos_clip(:, 3:-1:1);
+        end
 
         cbr.xtick = interp1(linspace(-1*max_abs, max_abs, color_N), 1:color_N, tick_vec, 'Nearest');
         cbr.xlabel = arrayfun(@(x) num2str(x, '%.2g'), tick_vec, 'UniformOutput', false);
     else
+        % show negative and positive color
         CData = interp1(linspace(-1*max_abs, max_abs, color_N), 1:color_N, vq, 'Nearest');
         
         max_neg_vq = max(vq(vq < 0));
@@ -144,7 +171,11 @@ if (colorinfo.discrete == 0)
         end
             
         % set max_neg_vq to min_pos_vq to white
-        if min_vq == max_neg_vq
+        if isempty(max_neg_vq)
+            if (tick_cbr(1)+1) <= tick_cbr(3)-1
+                c_map(tick_cbr(1)+1:tick_cbr(3)-1, :) = 1;
+            end
+        elseif (min_vq == max_neg_vq)
             if (tick_cbr(1)+1) <= tick_cbr(3)-1
                 c_map(tick_cbr(1)+1:tick_cbr(3)-1, :) = 1;
             end
@@ -158,7 +189,22 @@ if (colorinfo.discrete == 0)
         if (tick_cbr(end)+1) <= color_N
             c_map(tick_cbr(end)+1:end, :) = 1;
         end
-                
+        
+        
+        if colorinfo.clip_colorbar == 1
+            idx = sum(c_map, 2) < 3;
+            len_idx = length(idx);
+            
+            pos_idx = [true(fix(len_idx/2), 1); false(len_idx-fix(len_idx/2), 1)];
+            
+            c_map_pos_clip = hot(sum(pos_idx & idx));
+            c_map(pos_idx & idx, :) = c_map_pos_clip(:, 3:-1:1);
+            
+            c_map_pos_clip = hot(sum(~pos_idx & idx));
+            c_map(~pos_idx & idx, :) = c_map_pos_clip(end:-1:1, :);
+        end
+        
+
         tick_vec = 0;
         tick_neg = [min_vq, max_neg_vq];
         tick_pos = [min_pos_vq, max_vq];
@@ -182,7 +228,7 @@ if (colorinfo.discrete == 0)
         cbr.xtick = interp1(linspace(-1*max_abs, max_abs, color_N), 1:color_N, tick_vec, 'Nearest');
         cbr.xlabel = arrayfun(@(x) num2str(x, '%.2g'), tick_vec, 'UniformOutput', false);
     end   
-    cbr.caxis = [1, 129];
+    cbr.caxis = [1, color_N];
 else
     uniq_color = setdiff(vol_int(:), 0);
     color_N = numel(uniq_color);
