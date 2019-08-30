@@ -4,6 +4,7 @@ brant_check_empty(jobman.input_nifti.mask{1}, '\tA whole brain mask is expected!
 brant_check_empty(jobman.out_dir{1}, '\tPlease specify an output directories!\n');
 brant_check_empty(jobman.input_nifti.dirs{1}, '\tPlease input data directories!\n');
 
+ts = strsplit(jobman.time_series, ',');
 tc_pts = 1;
 mask_fn = jobman.input_nifti.mask{1};
 outdir = jobman.out_dir{1};
@@ -46,6 +47,22 @@ for mm = 1:numel(split_prefix)
         
         tic
         [data_2d_mat, data_tps, nii_hdr] = brant_4D_to_mat_new(nifti_list{m}, mask_ind, 'mat', subj_ids{m});
+        if ~(numel(ts) == 1 && isempty(ts{1}))
+            if all([numel(ts) == 2, ~isempty(ts{1}), ~isempty(ts{2})])
+                ts1 = str2num(ts{1});
+                ts2 = str2num(ts{2});
+                if ts1 > ts2 || ts1 < 1 || ts2 > size(data_2d_mat, 1)
+                    error('The first parameter  inputted in {time series} must be no more then the secend and both of them must be in the range of time series of input file.');
+                end
+                data_2d_mat = data_2d_mat(ts1:ts2,:);
+                data_tps = numel([ts1:ts2]);
+                nii_hdr.dime.dim(5) = data_tps;
+                nii_hdr.dime.glmax = max(unique(data_2d_mat(:)));
+                nii_hdr.dime.glmin = min(unique(data_2d_mat(:)));
+            else
+                error('You need input two parameters in {time series.}');
+            end
+        end
         brant_spm_check_orientations([mask_hdr, nii_hdr]);
         
 %         subj_tps(m) = data_tps;

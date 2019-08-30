@@ -5,6 +5,7 @@ brant_check_empty(jobman.input_nifti.mask{1}, '\tA whole brain mask is expected!
 brant_check_empty(jobman.out_dir{1}, '\tPlease specify an output directories!\n');
 brant_check_empty(jobman.input_nifti.dirs{1}, '\tPlease input data directories!\n');
 
+ts = strsplit(jobman.time_series, ',');
 outdir = jobman.out_dir{1};
 mask_fn = jobman.input_nifti.mask{1};
 bn_path = fileparts(which(mfilename));
@@ -43,15 +44,48 @@ for mm = 1:numel(split_prefix)
     end
     
     jobman.input_nifti.filetype = split_prefix{mm};
-    nifti_list = brant_get_subjs(jobman.input_nifti);
+    [nifti_list, subj_ids] = brant_get_subjs(jobman.input_nifti);
     nmpos = jobman.input_nifti.nm_pos;
-
-    [mask_hdr, mask_ind, size_mask, new_mask_fn] = brant_check_load_mask(mask_fn, nifti_list{1}, out_dir_tmp); %#ok<ASGLU>
     
     text_out = fullfile(out_dir_tmp, [opt_fc, '_subject_list.txt']);
-    fid = fopen(text_out, 'wt');
-    cellfun(@(x) fprintf(fid, '%s\n', x), nifti_list);
-    fclose(fid);
+    redefine_time = 0;
+    if ~(numel(ts) == 1 && isempty(ts{1}))
+        temp_nifti_list = {};
+        temp_data_dir = [outdir, '\temp_data'];
+        mkdir(temp_data_dir);
+        redefine_time = 1;
+        if all([numel(ts) == 2, ~isempty(ts{1}), ~isempty(ts{2})])
+            ts1 = str2num(ts{1});
+            ts2 = str2num(ts{2});
+            for m = 1:numel(nifti_list)
+                temp_nii = load_nii_mod(nifti_list{m});
+                if ts1 > ts2 || ts1 < 1 || ts2 > temp_nii.hdr.dime.dim(5)
+                    error('The first parameter  inputted in {time series} must be no more then the secend and both of them must be in the range of time series of input file.');
+                end
+                temp_nii.img = temp_nii.img(:,:,:,ts1:ts2);
+                temp_nii.hdr.dime.dim(5) = numel(ts1:ts2);
+                temp_nii.hdr.dime.glmax = max(unique(temp_nii.img(:)));
+                temp_nii.hdr.dime.glmin = min(unique(temp_nii.img(:)));
+                save_nii_mod(temp_nii, [temp_data_dir, '\', subj_ids{m}, '.nii']);
+                temp_nifti_list{end + 1} = [temp_data_dir, '\', subj_ids{m}, '.nii'];
+            end
+        else
+            error('You need input two parameters in {time series.}');
+        end
+        fid = fopen(text_out, 'wt');
+        cellfun(@(x) fprintf(fid, '%s\n', x), temp_nifti_list);
+        fclose(fid);
+    else
+        fid = fopen(text_out, 'wt');
+        cellfun(@(x) fprintf(fid, '%s\n', x), nifti_list);
+        fclose(fid);
+    end
+
+    [mask_hdr, mask_ind, size_mask, new_mask_fn] = brant_check_load_mask(mask_fn, nifti_list{1}, out_dir_tmp); %#ok<ASGLU>
+    if redefine_time
+        save_nii_mod(load_nii_mod(new_mask_fn), new_mask_fn);
+    end
+    
 
     if (jobman.cpu == 1)
         mode_str = '-mode cpu -cpub 256';

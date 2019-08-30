@@ -8,6 +8,7 @@ outdir = jobman.out_dir{1};
 mask_fn = jobman.input_nifti.mask{1};
 totalvoxel = jobman.neighbour_num + 1;
 
+ts = strsplit(jobman.time_series, ',');
 nor_ind = jobman.nor;
 
 sm_ind = jobman.sm_ind;
@@ -40,8 +41,22 @@ for mm = 1:numel(split_prefix)
     
     for m = 1:num_subj
         tic;
-
         [data_2d_mat, data_tps] = brant_4D_to_mat_new(nifti_list{m}, mask_ind, 'cell', subj_ids{m});
+        if ~(numel(ts) == 1 && isempty(ts{1}))
+            if all([numel(ts) == 2, ~isempty(ts{1}), ~isempty(ts{2})])
+                ts1 = str2num(ts{1});
+                ts2 = str2num(ts{2});
+                if ts1 > ts2 || ts1 < 1 || ts2 > data_tps
+                    error('The first parameter  inputted in {time series} must be no more then the secend and both of them must be in the range of time series of input file.');
+                end
+                for n = 1:numel(data_2d_mat)
+                    data_2d_mat{n} = data_2d_mat{n}(ts1:ts2,:);
+                end
+                data_tps = numel([ts1:ts2]);
+            else
+                error('You need input two parameters in {time series.}');
+            end
+        end
 %         brant_spm_check_orientations([mask_hdr, nii_hdr]);
         
         fprintf('\tCalculating ReHo for subject %d/%d %s...\n', m, num_subj, subj_ids{m});
