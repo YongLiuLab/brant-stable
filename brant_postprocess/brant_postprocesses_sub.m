@@ -856,11 +856,11 @@ for m = 1:size(prompt, 1)
                     prompt_tmp = prompt{m, 3};
                 end
                 
-                if any(strcmpi({'mode_display:popupmenu', 'modules_info:popupmenu',...
+                if any(strcmpi({'mode_display:popupmenu', 'modules_info:popupmenu', 'colour_mode:popupmenu',...
                                 'color_type_pos:popupmenu', 'color_type_neg:popupmenu', 'material_type:popupmenu',...
-                                'stat_type:popupmenu', 'shading_type:popupmenu',...
+                                'stat_type:popupmenu', 'shading_type:popupmenu','colormap:popupmenu',...
                                 'lighting_type:popupmenu', 'matrix_type:popupmenu', 'mask_color:popupmenu', 'view:popupmenu',...
-                                'metrics:popupmenu'}, ui_tags{m}{n}))
+                                'metrics:popupmenu', 'view_angle:popupmenu'}, ui_tags{m}{n}))
                     pop_str = prompt_tmp{1}(2:end);
                     pop_val_ind = find(strcmpi(jobman.(prompt_tmp{1}{1}{1}), pop_str));
                 else
@@ -1552,7 +1552,7 @@ if isfield(jobman, 'out_dir')
 end
 % process_fun
 
-func_need_hcon = {'network visualization', 'roi mapping', 'surface mapping'};
+func_need_hcon = {'network visualization', 'roi mapping', 'slice mapping', 'surface mapping'};
 
 try
 %     save parameters directly to the output dir or wkdir
