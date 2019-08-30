@@ -6,6 +6,7 @@ filetype: files in the filetype will be searched in input directories.
 4D nifti files: if the input data is 4D, check this item. Otherwise uncheck.
 input dirs: directories can be input either using a .txt file or spm select window.
     
+time series:choose time series of input file.Two parameters like {10,50} are needed.
 mean temporal ampilitude: calculate absolute value of detrended and demeaned time series.
 standard deviation: calculate standard deviation of time series
 variation: calculate variation of time series
