@@ -1,20 +1,17 @@
 Help information for Surface Mapping:
     
 show colorbar: display colorbar
-discrete value: the intensity of the input volume has float or integer datatype
-zero color: normalized RGB color for zero value, range from 0 to 1.
+discrete color: the color of display has discrete or continuous change.
 alpha: degree of opeque
 max val radius(mm): radius for maximum neighbour interpolation. if the radius is greater than the size of a voxel, the program will search for maximum value within a sphere for each vertex, otherwise (leave empty or smaller than the size of a voxel) use the default 1-voxel interpolation.
-    
-pos color: colormap of positive intensity
-neg color: colormap of negative intensity
 display: mode of display
 material: material of surface
 lighting: type of light
 shading: type of shader
+colormap:type of color.
 surface: surface file
-brain vol: volume to map to the surface
-threshold: use matlab syntax to generate a mask for input volume.
+brain vol: volume to map to the surface.
+thr vol: threshold of the value which can be colour.You can input 0 or even number of incremental parameters.If nothing has been inputted, the default parameters are min and max of the value of brain.Every two parameters determine a colour region of the value of brain.
     
 Buttons:
     S: Save parameters of the current panel to a *.mat file. The *.mat can be further loaded for the panel or be used in a script processing.
@@ -22,3 +19,10 @@ Buttons:
     ?: Help information.
     
 end
+
+Tips:
+1.For lighting
+If you want re-lighting when a figure has been rotated by using 3D-rotate button in toolbar, you can click 3D-rotate button again to make the icon of mouse changing into a arrow and click the figure to re-lighting at angle of view.
+2.For surface template
+The following surface templates are from cat12/templates_surfaces:
+c_central_freesurfer.txt/c_central_Template_T1_IXI555_MNI152_GS.txt/h_central_freesurfer.txt/h_central_Template_T1_IXI555_MNI152_GS.txt/h_central_withCC_freesurfer.txt/h_central_withCC_Template.txt/h_inflated_freesurfer.txt
