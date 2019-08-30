@@ -36,3 +36,4 @@ set(h_light, 'Position', campos, 'Tag', get(h_axis, 'Tag'));
 
 material(draw_param.material_type);
 lighting(draw_param.lighting_type);
+end

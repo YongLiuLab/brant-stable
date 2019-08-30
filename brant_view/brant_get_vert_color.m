@@ -16,6 +16,7 @@ end
 
 vol_data = load_nii_mod(vol);
 vol_int = single(vol_data.img);
+
 % from brant_get_XYZ
 s_mat = [vol_data.hdr.hist.srow_x; vol_data.hdr.hist.srow_y; vol_data.hdr.hist.srow_z];
 if (s_mat(1, 1) < 0)
@@ -40,222 +41,64 @@ if ~isempty(rad_mm) && all(rad_mm >= vox_len)
     vol_int = imdilate(vol_int, reshape(dist_vox, 2 * rad_N' + 1)); % find maximum in nearnest neighbour
 end
 
-% if (colorinfo.discrete == 0)
-%     vq = interp3(X, Y, Z, vol_int, vertices_coord(:, 1), vertices_coord(:, 2), vertices_coord(:, 3));
-% else
-%     vq = interp3(X, Y, Z, vol_int, vertices_coord(:, 1), vertices_coord(:, 2), vertices_coord(:, 3), 'Nearest');
-% end
+if isempty(colorinfo.vol_thr)
+    colorinfo.vol_thr = [vol_data.hdr.dime.glmin, vol_data.hdr.dime.glmax];
+end
+num_thr = numel(colorinfo.vol_thr);
+if mod(num_thr, 2)
+    error('The number of parameters you input in {thr vol} must be even.');
+end
+if colorinfo.vol_thr(1) < vol_data.hdr.dime.glmin || colorinfo.vol_thr(end) > vol_data.hdr.dime.glmax
+    error(['The parameters in {thr vol} must be in the range of value of brain_vol']);
+end
 
-thres_str = strrep(colorinfo.vol_exp, 'vol', 'vol_int');
-vol_int = vol_int .* eval(thres_str);
-
-vq = interp3(X, Y, Z, vol_int, vertices_coord(:, 1), vertices_coord(:, 2), vertices_coord(:, 3), 'Nearest');
-
-% % max_abs = max(abs(vq(:)));
-% thres_str = strrep(colorinfo.vol_exp, 'vol', 'vq');
-% vol_3d_mask = eval(thres_str);
-% vq(~vol_3d_mask) = 0;
-    
-% min_vq = min(setdiff(vq, 0));
-% max_vq = max(setdiff(vq, 0));
-min_vq = min(setdiff(vol_int(:), 0));
-max_vq = max(setdiff(vol_int(:), 0));
-max_abs = max(abs(vol_int(:)));
-
-if (colorinfo.discrete == 0)
-    
-    color_N = 129;
-    
-%     negative_clip = 40;
-    c_map_pos = hot(fix(color_N/2));
-    c_map = [c_map_pos(:,3:-1:1); ones(1, 3); c_map_pos(end:-1:1,:)];
-    
-    
-%     clip = 17;
-%     color_N_half = ceil((color_N + 1) / 4);
-%     c_map = winter(color_N);
-%     c_map((color_N_half - clip):color_N_half, 3) = 1;
-%     c_map((color_N_half - clip):color_N_half, 1) = linspace(0, 1, clip+1);
-%     c_map(color_N_half:(color_N_half + clip), 1) = 1;
-%     c_map(color_N_half:(color_N_half + clip), 3) = linspace(1, 0, clip+1);
-    
-%     c_map = c_map / 2;
-%     unmask below one line if you want to visualize positive color in blue
-%     c_map=c_map(end:-1:1,:);
-
-%     lin_cmap_neg = linspace(-1*max_abs, 0, floor(color_N / 2) + 1);
-%     lin_cmap_pos = linspace(0, max_abs, floor(color_N / 2) + 1);
-
-    thr = max_abs / color_N * 20;
-%     thr = 1e-2;
-    
-    if (min_vq > 0)
-        % only positive
-        CData = interp1(linspace(-1*max_abs, max_abs, color_N), 1:color_N, vq, 'Nearest');
-        
-        tick_cbr = interp1(linspace(-1*max_abs, max_abs, color_N), 1:color_N, sort(unique([0, min_vq, max_vq])), 'Nearest');
-        if min_vq ~= max_vq
-            if (abs(min_vq) > thr)
-                tick_vec = [0, min_vq, max_vq];
-            else
-                tick_vec = [0, max_vq];
-            end
-        else       
-            tick_vec = [0, max_vq];
-        end
-        
-        % set -inf to minimum positive to white
-        if tick_cbr(2)-1 >= 1
-            c_map(1:tick_cbr(2)-1, :) = 1;
-        end
-
-        % set maximum positive to inf to white
-        if (tick_cbr(end)+1) <= color_N
-            c_map(tick_cbr(end)+1:end, :) = 1;
-        end
-        
-        if colorinfo.clip_colorbar == 1
-            idx = sum(c_map, 2) < 3;
-            c_map_pos_clip = hot(sum(idx));
-            c_map(idx, :) = c_map_pos_clip(end:-1:1, :);
-        end
-            
-        cbr.xtick = interp1(linspace(-1*max_abs, max_abs, color_N), 1:color_N, tick_vec, 'Nearest');
-        cbr.xlabel = arrayfun(@(x) num2str(x, '%.2g'), tick_vec, 'UniformOutput', false);
-    elseif (max_vq < 0)
-        % only negative value
-        CData = interp1(linspace(-1*max_abs, max_abs, color_N), 1:color_N, vq, 'Nearest');
-        
-        tick_cbr = interp1(linspace(-1*max_abs, max_abs, color_N), 1:color_N, sort(unique([min_vq, max_vq, 0])), 'Nearest');
-        if min_vq ~= max_vq
-            if (abs(max_vq) > thr)
-                tick_vec = [min_vq, max_vq, 0];
-            else
-                tick_vec = [max_vq, 0];
-            end
-        else
-            % only one value      
-            tick_vec = [min_vq, 0];
-        end
-        
-        % set maximum negative to inf to white
-        if tick_cbr(end-1)+1 <= color_N
-            c_map(tick_cbr(end-1)+1:end, :) = 1;
-        end
-            
-        % set -inf to minimum negative to white
-        if tick_cbr(1)-1 >= 1
-            c_map(1:tick_cbr(1)-1, :) = 1;
-        end
-        
-        if colorinfo.clip_colorbar == 1
-            idx = sum(c_map, 2) < 3;
-            c_map_pos_clip = hot(sum(idx));
-            c_map(idx, :) = c_map_pos_clip(:, 3:-1:1);
-        end
-
-        cbr.xtick = interp1(linspace(-1*max_abs, max_abs, color_N), 1:color_N, tick_vec, 'Nearest');
-        cbr.xlabel = arrayfun(@(x) num2str(x, '%.2g'), tick_vec, 'UniformOutput', false);
-    else
-        % show negative and positive color
-        CData = interp1(linspace(-1*max_abs, max_abs, color_N), 1:color_N, vq, 'Nearest');
-        
-        max_neg_vq = max(vq(vq < 0));
-        min_pos_vq = min(vq(vq > 0));
-        
-        tick_cbr = interp1(linspace(-1*max_abs, max_abs, color_N), 1:color_N, sort(unique([min_vq, max_neg_vq, 0, min_pos_vq, max_vq])), 'Nearest');
-        
-        % set -inf to min_vq to white
-        if (tick_cbr(1)-1) >= 1
-            c_map(1:tick_cbr(1)-1, :) = 1;
-        end
-            
-        % set max_neg_vq to min_pos_vq to white
-        if isempty(max_neg_vq)
-            if (tick_cbr(1)+1) <= tick_cbr(3)-1
-                c_map(tick_cbr(1)+1:tick_cbr(3)-1, :) = 1;
-            end
-        elseif (min_vq == max_neg_vq)
-            if (tick_cbr(1)+1) <= tick_cbr(3)-1
-                c_map(tick_cbr(1)+1:tick_cbr(3)-1, :) = 1;
-            end
-        else
-            if (tick_cbr(2)+1) <= tick_cbr(4)-1
-                c_map(tick_cbr(2)+1:tick_cbr(4)-1, :) = 1;
-            end
-        end
-        
-        % set max_vq to inf to white
-        if (tick_cbr(end)+1) <= color_N
-            c_map(tick_cbr(end)+1:end, :) = 1;
-        end
-        
-        
-        if colorinfo.clip_colorbar == 1
-            idx = sum(c_map, 2) < 3;
-            len_idx = length(idx);
-            
-            pos_idx = [true(fix(len_idx/2), 1); false(len_idx-fix(len_idx/2), 1)];
-            
-            c_map_pos_clip = hot(sum(pos_idx & idx));
-            c_map(pos_idx & idx, :) = c_map_pos_clip(:, 3:-1:1);
-            
-            c_map_pos_clip = hot(sum(~pos_idx & idx));
-            c_map(~pos_idx & idx, :) = c_map_pos_clip(end:-1:1, :);
-        end
-        
-
-        tick_vec = 0;
-        tick_neg = [min_vq, max_neg_vq];
-        tick_pos = [min_pos_vq, max_vq];
-        
-        if (abs(max_neg_vq) > thr)
-            tick_vec = [max_neg_vq, tick_vec];
-        end
-        
-        if (abs(diff(tick_neg)) > thr)
-            tick_vec = [min_vq, tick_vec];
-        end
-        
-        if (abs(min_pos_vq) > thr)
-            tick_vec = [tick_vec, min_pos_vq];
-        end
-        
-        if (abs(diff(tick_pos)) > thr)
-            tick_vec = [tick_vec, max_vq];
-        end
-        
-        cbr.xtick = interp1(linspace(-1*max_abs, max_abs, color_N), 1:color_N, tick_vec, 'Nearest');
-        cbr.xlabel = arrayfun(@(x) num2str(x, '%.2g'), tick_vec, 'UniformOutput', false);
-    end   
-    cbr.caxis = [1, color_N];
-else
+if colorinfo.discrete
     uniq_color = setdiff(vol_int(:), 0);
     color_N = numel(uniq_color);
-    
     c_map = hsv(color_N);
     rand_ind = randperm(color_N, color_N);
-    c_map = [1, 1, 1; c_map(rand_ind, :)];
-    
-    CData = interp1([0; uniq_color], 1:(color_N+1), vq, 'Nearest');
-    
-    min_pos_vq = min(vq(vq > 0));
-    tick_cbr = interp1([0; uniq_color], 1:(color_N+1), [0, min_pos_vq, max_vq], 'Nearest');
-    if (tick_cbr(3)+1) <= color_N
-        c_map(tick_cbr(3)+1:end, :) = 1;
+    c_map = [1, 1, 1; c_map(rand_ind, :)];  
+else
+    min_vol = min(unique(vol_int(:)));
+    max_vol = max(unique(vol_int(:))); 
+    abs_max_vq = max(abs(min_vol), abs(max_vol));
+    color_N = 513;
+    c_map = eval([colorinfo.colormap, '(color_N)']);
+    c_map_lr = interp1(linspace(-abs_max_vq, abs_max_vq, color_N), 1:color_N, ...
+        [colorinfo.vol_thr(1), colorinfo.vol_thr(end)], 'Nearest');
+    c_map = c_map(c_map_lr(1):c_map_lr(2),:);
+    c_map(end + 1,:) = [1 1 1];
+    color_N = numel(c_map_lr(1):c_map_lr(2));
+end
+vq = interp3(X, Y, Z, vol_int, vertices_coord(:, 1), vertices_coord(:, 2), ...
+    vertices_coord(:, 3), 'Nearest');
+if num_thr > 2
+    for m = 2:2:num_thr - 1
+        temp = interp1(linspace(colorinfo.vol_thr(1), colorinfo.vol_thr(end), color_N), ...
+            1:color_N, [colorinfo.vol_thr(m), colorinfo.vol_thr(m + 1)],'Nearest');
+        for n = temp(1):temp(2)
+            c_map(n,:) = [1 1 1];
+        end
     end
-    c_map(1:max(tick_cbr(2)-1, 1), :) = 1;
-    
-    thr = max_abs / color_N * 8;
-    
-    if ((abs(min_pos_vq) > thr) && ((max_vq - min_pos_vq) > thr))
-        tick_vec = [0, min_pos_vq, max_vq];
-    else
-        tick_vec = [0, max_vq];
-    end
-    
-    cbr.xtick = interp1([0; uniq_color], 1:(color_N+1), tick_vec, 'Nearest');
+end
+if abs(colorinfo.vol_thr(1) - colorinfo.vol_thr(end)) < eps
+    CData = nan(size(vq));
+    CData(find(abs(vq - colorinfo.vol_thr(1)) < eps)) = 1;
+    CData(find(isnan(CData))) = 2;
+    tick_vec = [colorinfo.vol_thr(1), colorinfo.vol_thr(end)];
+    cbr.xtick = [1 1.5];
     cbr.xlabel = arrayfun(@(x) num2str(x, '%d'), tick_vec, 'UniformOutput', false);
-    
-    cbr.caxis = [1, color_N+1];
+    cbr.caxis = [1, 2];
+else
+    CData = interp1(linspace(colorinfo.vol_thr(1), colorinfo.vol_thr(end), color_N),...
+        1:color_N, vq, 'Nearest');
+    CData(find(abs(vq - colorinfo.vol_thr(1)) < eps)) = 1;
+    CData(find(isnan(CData))) = color_N + 1;
+    tick_vec = colorinfo.vol_thr;
+    cbr.xtick = interp1(linspace(colorinfo.vol_thr(1), colorinfo.vol_thr(end), color_N),...
+        1:color_N, tick_vec, 'Nearest');
+    cbr.xlabel = arrayfun(@(x) num2str(x, '%d'), tick_vec, 'UniformOutput', false);
+    cbr.caxis = [1, color_N + 1];
+end
+
 end
