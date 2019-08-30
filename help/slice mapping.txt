@@ -1,0 +1,22 @@
+Help information for Slice Mapping:
+    
+view angle: Angle of view.
+slice order: Order of slice.
+bg: Background file.
+brain vol: file of volume to map to the background.
+white background: Display white background in the margin of slice.
+only positive£ºonly display positive value of brain.
+only negative£ºonly display negative value of brain.
+expand display range: 
+colormap:type of color.
+expand diaplay range: the function will work when only one colour range has been defined in {thr vol}. The brain value less than threshold_1 and more then threshold_end will be coloured as threshold_1 and threshold_end inputted in {thr vol} when the colour range contains negative and positive.The brain value less than threshold_1 will be coloured as threshold_1 inputted in {thr vol} when the colour range contains negative .
+colormap:type of color.The brain value more then threshold_end will be coloured as threshold_end inputted in {thr vol} when the colour range contains positive.
+thr vol: threshold of the value which can be colour.You can input 0 or even number of incremental parameters.If nothing has been inputted, the default parameters are min and max of the value of brain.Every two parameters determine a colour region of the value of brain.
+col title: title of colorbar.
+    
+Buttons:
+    S: Save parameters of the current panel to a *.mat file. The *.mat can be further loaded for the panel or be used in a script processing.
+    L: Load parameters from *.mat for the current panel.
+    ?: Help information.
+    
+end
