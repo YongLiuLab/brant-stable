@@ -59,16 +59,16 @@ if colorinfo.discrete
     rand_ind = randperm(color_N, color_N);
     c_map = [1, 1, 1; c_map(rand_ind, :)];  
 else
-    min_vol = min(unique(vol_int(:)));
-    max_vol = max(unique(vol_int(:))); 
-    abs_max_vq = max(abs(min_vol), abs(max_vol));
+%     min_vol = min(unique(vol_int(:)));
+%     max_vol = max(unique(vol_int(:))); 
+%     abs_max_vq = max(abs(min_vol), abs(max_vol));
     color_N = 513;
     c_map = eval([colorinfo.colormap, '(color_N)']);
-    c_map_lr = interp1(linspace(-abs_max_vq, abs_max_vq, color_N), 1:color_N, ...
-        [colorinfo.vol_thr(1), colorinfo.vol_thr(end)], 'Nearest');
-    c_map = c_map(c_map_lr(1):c_map_lr(2),:);
+%     c_map_lr = interp1(linspace(-abs_max_vq, abs_max_vq, color_N), 1:color_N, ...
+%         [colorinfo.vol_thr(1), colorinfo.vol_thr(end)], 'Nearest');
+%     c_map = c_map(c_map_lr(1):c_map_lr(2),:);
     c_map(end + 1,:) = [1 1 1];
-    color_N = numel(c_map_lr(1):c_map_lr(2));
+%     color_N = numel(c_map_lr(1):c_map_lr(2));
 end
 vq = interp3(X, Y, Z, vol_int, vertices_coord(:, 1), vertices_coord(:, 2), ...
     vertices_coord(:, 3), 'Nearest');
@@ -97,8 +97,8 @@ else
     tick_vec = colorinfo.vol_thr;
     cbr.xtick = interp1(linspace(colorinfo.vol_thr(1), colorinfo.vol_thr(end), color_N),...
         1:color_N, tick_vec, 'Nearest');
-    cbr.xlabel = arrayfun(@(x) num2str(x, '%d'), tick_vec, 'UniformOutput', false);
-    cbr.caxis = [1, color_N + 1];
+    cbr.xlabel = arrayfun(@(x) num2str(x, '%.1f'), tick_vec, 'UniformOutput', false);
+    cbr.caxis = [1, color_N];
 end
 
 end
