@@ -6,7 +6,7 @@ filetype: files in the filetype will be searched in input directories.
 4D nifti files: if the input data is 4D, check this item. Otherwise uncheck.
 input dirs: directories can be input either using a .txt file or spm select window.
 	
-time series:choose time series of input file.Two parameters like {10,50} are needed.
+time series:choose time series of input file.Two parameters like 10,50 are needed.
 compute: use OPENCL supported CPU or GPU to calculate FCD
 r threshold: threshold of correlation (to binarize functional connectivity and sum up)
 metrics:
