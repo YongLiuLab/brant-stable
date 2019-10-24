@@ -71,7 +71,24 @@ else
 %     color_N = numel(c_map_lr(1):c_map_lr(2));
 end
 vq = interp3(X, Y, Z, vol_int, vertices_coord(:, 1), vertices_coord(:, 2), ...
-    vertices_coord(:, 3), 'Nearest');
+    vertices_coord(:, 3), 'linear');
+
+% vq = zeros(size(vertices_coord,1),1);
+% s_mat(4,:) = [0, 0, 0, 1];
+% vertices_coord(:,4) = 1;
+% position = s_mat\vertices_coord';
+% position(4,:) = [];
+% for i = 1:size(vertices_coord,1)
+%     cube = [floor(position(:,i))';ceil(position(:,i))'];
+%     portion = position(:,i)' - cube(1,:);
+%     cube(2,portion == 0) = cube(2,portion == 0) + 1;
+%     tmpT = vol_int(cube(1,2):cube(2,2),cube(1,1):cube(2,1),cube(1,3):cube(2,3));
+%     tmpT = (tmpT(:,:,2) - tmpT(:,:,1)) .* portion(3) + tmpT(:,:,1);
+%     tmpT = (tmpT(:,2) - tmpT(:,1)) .* portion(2) + tmpT(:,1);
+%     tmpT = (tmpT(2) - tmpT(1)) .* portion(1) + tmpT(1);
+%     vq(i) = tmpT;
+% end
+
 if num_thr > 2
     for m = 2:2:num_thr - 1
         temp = interp1(linspace(colorinfo.vol_thr(1), colorinfo.vol_thr(end), color_N), ...
@@ -97,7 +114,7 @@ else
     tick_vec = colorinfo.vol_thr;
     cbr.xtick = interp1(linspace(colorinfo.vol_thr(1), colorinfo.vol_thr(end), color_N),...
         1:color_N, tick_vec, 'Nearest');
-    cbr.xlabel = arrayfun(@(x) num2str(x, '%.1f'), tick_vec, 'UniformOutput', false);
+    cbr.xlabel = arrayfun(@(x) num2str(x, '%.2f'), tick_vec, 'UniformOutput', false);
     cbr.caxis = [1, color_N];
 end
 

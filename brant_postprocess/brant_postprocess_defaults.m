@@ -640,7 +640,7 @@ switch(lower(process_str))
         process_pars.vol_map = {bn_atlas};
         process_pars.material_type = 'shiny';
         process_pars.lighting_type = 'gouraud';
-        process_pars.shading_type = 'flat';
+        process_pars.shading_type = 'interp';
         process_pars.mode_display = 'halves:left and right';
         process_pars.colormap = 'jet';
         process_pars.vol_thr = '';
