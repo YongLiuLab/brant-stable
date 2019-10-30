@@ -63,7 +63,31 @@ else
 %     max_vol = max(unique(vol_int(:))); 
 %     abs_max_vq = max(abs(min_vol), abs(max_vol));
     color_N = 513;
-    c_map = eval([colorinfo.colormap, '(color_N)']);
+    switch colorinfo.colormap
+        case 'AFNI'
+            if colorinfo.vol_thr(1) < 0 && colorinfo.vol_thr(end) > 0
+                zero_location = round(interp1(linspace(colorinfo.vol_thr(1), colorinfo.vol_thr(end), color_N), 1:color_N, 0));
+                c_map = [zeros(1,zero_location - 1),1,ones(1,color_N - zero_location);...
+                        linspace(1,0,zero_location - 1),1,linspace(0,1,color_N - zero_location);...
+                        ones(1,zero_location - 1),1,zeros(1,color_N - zero_location)]';
+            else
+                error('You need input a image with negative and positive value');
+            end
+        case 'AFNI_neg'
+            if colorinfo.vol_thr(end) <= 0
+                c_map = [zeros(1,color_N);linspace(1,0,color_N);ones(1,color_N)]';
+            else
+                error('You need input a image with negative value only');
+            end
+        case 'AFNI_pos'
+            if colorinfo.vol_thr(1) >= 0
+                c_map = [ones(1,color_N);linspace(0,1,color_N);zeros(1,color_N)]';
+            else
+                error('You need input a image with positive value only');
+            end
+        otherwise
+            c_map = eval([colorinfo.colormap, '(color_N)']);
+    end
 %     c_map_lr = interp1(linspace(-abs_max_vq, abs_max_vq, color_N), 1:color_N, ...
 %         [colorinfo.vol_thr(1), colorinfo.vol_thr(end)], 'Nearest');
 %     c_map = c_map(c_map_lr(1):c_map_lr(2),:);
