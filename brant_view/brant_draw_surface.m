@@ -146,7 +146,8 @@ if ~isempty(vol)
         cbar_h = colorbar('Location', 'SouthOutside');
         set(cbar_h, 'Position', [0.35, 0.06, 0.3, 0.05],...
                     'XTick', cbr.xtick,...
-                    'XTickLabel', cbr.xlabel);
+                    'XTickLabel', cbr.xlabel, ...
+                    'FontSize', 15);
                 
 % set(gca,'box','off','Xtick',[])
     end
