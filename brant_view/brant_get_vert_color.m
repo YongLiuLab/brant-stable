@@ -96,6 +96,7 @@ else
 end
 vq = interp3(X, Y, Z, vol_int, vertices_coord(:, 1), vertices_coord(:, 2), ...
     vertices_coord(:, 3), 'linear');
+vq(find(vq > -0.005 & vq < 0.005)) = NaN;   %don't display the value in the range of [-0.005, 0.005]
 
 % vq = zeros(size(vertices_coord,1),1);
 % s_mat(4,:) = [0, 0, 0, 1];
@@ -122,7 +123,7 @@ if num_thr > 2
         end
     end
 end
-if abs(colorinfo.vol_thr(1) - colorinfo.vol_thr(end)) < eps
+if abs(colorinfo.vol_thr(1) - colorinfo.vol_thr(end)) < eps     % add for viewing single value
     CData = nan(size(vq));
     CData(find(abs(vq - colorinfo.vol_thr(1)) < eps)) = 1;
     CData(find(isnan(CData))) = 2;
@@ -130,7 +131,7 @@ if abs(colorinfo.vol_thr(1) - colorinfo.vol_thr(end)) < eps
     cbr.xtick = [1 1.5];
     cbr.xlabel = arrayfun(@(x) num2str(x, '%d'), tick_vec, 'UniformOutput', false);
     cbr.caxis = [1, 2];
-else
+else    
     CData = interp1(linspace(colorinfo.vol_thr(1), colorinfo.vol_thr(end), color_N),...
         1:color_N, vq, 'Nearest');
     CData(find(abs(vq - colorinfo.vol_thr(1)) < eps)) = 1;
