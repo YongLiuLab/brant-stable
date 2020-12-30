@@ -91,12 +91,11 @@ else
 %     c_map_lr = interp1(linspace(-abs_max_vq, abs_max_vq, color_N), 1:color_N, ...
 %         [colorinfo.vol_thr(1), colorinfo.vol_thr(end)], 'Nearest');
 %     c_map = c_map(c_map_lr(1):c_map_lr(2),:);
-    c_map(end + 1,:) = [1 1 1];
 %     color_N = numel(c_map_lr(1):c_map_lr(2));
 end
 vq = interp3(X, Y, Z, vol_int, vertices_coord(:, 1), vertices_coord(:, 2), ...
     vertices_coord(:, 3), 'linear');
-vq(find(vq > -0.005 & vq < 0.005)) = NaN;   %don't display the value in the range of [-0.005, 0.005]
+% vq(find(vq > -0.005 & vq < 0.005)) = NaN;   %don't display the value in the range of [-0.005, 0.005]
 
 % vq = zeros(size(vertices_coord,1),1);
 % s_mat(4,:) = [0, 0, 0, 1];
@@ -135,7 +134,10 @@ else
     CData = interp1(linspace(colorinfo.vol_thr(1), colorinfo.vol_thr(end), color_N),...
         1:color_N, vq, 'Nearest');
     CData(find(abs(vq - colorinfo.vol_thr(1)) < eps)) = 1;
-    CData(find(isnan(CData))) = color_N + 1;
+    if sum(isnan(CData))
+        CData(find(isnan(CData))) = color_N + 1;
+        c_map(end + 1,:) = [1 1 1];
+    end
     tick_vec = colorinfo.vol_thr;
     cbr.xtick = interp1(linspace(colorinfo.vol_thr(1), colorinfo.vol_thr(end), color_N),...
         1:color_N, tick_vec, 'Nearest');
