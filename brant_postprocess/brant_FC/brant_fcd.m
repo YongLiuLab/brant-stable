@@ -5,7 +5,7 @@ brant_check_empty(jobman.input_nifti.mask{1}, '\tA whole brain mask is expected!
 brant_check_empty(jobman.out_dir{1}, '\tPlease specify an output directories!\n');
 brant_check_empty(jobman.input_nifti.dirs{1}, '\tPlease input data directories!\n');
 
-ts = strsplit(jobman.time_series, ',');
+ts = strsplit(jobman.time_series, ':');
 outdir = jobman.out_dir{1};
 mask_fn = jobman.input_nifti.mask{1};
 bn_path = fileparts(which(mfilename));

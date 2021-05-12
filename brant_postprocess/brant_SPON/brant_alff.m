@@ -37,7 +37,7 @@ brant_check_empty(jobman.input_nifti.dirs{1}, '\tPlease input data directories!\
 FS = 1 / jobman.tr;
 BP = [jobman.lower_thr, jobman.upper_thr];
 
-ts = strsplit(jobman.time_series, ',');
+ts = strsplit(jobman.time_series, ':');
 % tc_pts = 1; %jobman.timepoint;
 nor_ind = jobman.nor;
 outdir = jobman.out_dir{1};

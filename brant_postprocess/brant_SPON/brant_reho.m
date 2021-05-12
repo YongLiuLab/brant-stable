@@ -8,7 +8,7 @@ outdir = jobman.out_dir{1};
 mask_fn = jobman.input_nifti.mask{1};
 totalvoxel = jobman.neighbour_num + 1;
 
-ts = strsplit(jobman.time_series, ',');
+ts = strsplit(jobman.time_series, ':');
 nor_ind = jobman.nor;
 
 sm_ind = jobman.sm_ind;
