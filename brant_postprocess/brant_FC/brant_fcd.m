@@ -51,8 +51,9 @@ for mm = 1:numel(split_prefix)
     redefine_time = 0;
     if ~(numel(ts) == 1 && isempty(ts{1}))
         temp_nifti_list = {};
-        temp_data_dir = fullfile(outdir, 'temp_data');
-        mkdir(temp_data_dir);
+        for s = 1:numel(subj_ids)
+            mkdir(fullfile(outdir, 'temp_data', subj_ids{s}));
+        end
         redefine_time = 1;
         if all([numel(ts) == 2, ~isempty(ts{1}), ~isempty(ts{2})])
             ts1 = str2num(ts{1});
@@ -66,8 +67,8 @@ for mm = 1:numel(split_prefix)
                 temp_nii.hdr.dime.dim(5) = numel(ts1:ts2);
                 temp_nii.hdr.dime.glmax = max(unique(temp_nii.img(:)));
                 temp_nii.hdr.dime.glmin = min(unique(temp_nii.img(:)));
-                save_nii_mod(temp_nii, fullfile(temp_data_dir, [subj_ids{m}, '.nii']));
-                temp_nifti_list{end + 1} = fullfile(temp_data_dir, [subj_ids{m}, '.nii']);
+                save_nii_mod(temp_nii, fullfile(outdir, 'temp_data', subj_ids{m}, [subj_ids{m}, '.nii']));
+                temp_nifti_list{end + 1} = fullfile(outdir, 'temp_data', subj_ids{m}, [subj_ids{m}, '.nii']);
             end
         else
             error('You need input two parameters in {time series.}');
