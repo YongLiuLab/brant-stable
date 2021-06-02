@@ -368,8 +368,8 @@ switch(lower(process_str))
         
     case 'fcd/fcs'
         process_pars.time_series = '';
-        process_pars.cpu = 1;
-        process_pars.gpu = 0;
+        process_pars.cpu = 0;
+        process_pars.gpu = 1;
         process_pars.threshold_corr = 0.6;
         process_pars.metrics = 'fcd';
         process_pars.out_dir = {''};
