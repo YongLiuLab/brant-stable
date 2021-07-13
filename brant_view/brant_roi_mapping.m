@@ -9,9 +9,13 @@ disp_surface_ind = jobman.disp_surface;
 surface_file = jobman.surface{1};
 draw_param.alpha = jobman.alpha;
 
-draw_param.material_type = jobman.material_type;
-draw_param.lighting_type = jobman.lighting_type;
+% draw_param.material_type = jobman.material_type;
+% draw_param.lighting_type = jobman.lighting_type;
 % draw_param.shading_type = jobman.shading_type;
+draw_param.material_type = 'dull';
+draw_param.lighting_type = 'gouraud';
+roi_param.material_type = jobman.material_type;
+roi_param.lighting_type = jobman.lighting_type;
 
 roi_vec = jobman.roi_vec;
 mode_display = jobman.mode_display;
@@ -81,7 +85,7 @@ if ~isempty(roi_vec)
     for m = 1:num_roi_show
         mask_tmp = smooth3(rois_inds{roi_vec_ind(m)});
         try
-            h_roi(m) = draw_vol(mask_tmp, nhood, pixdim, temp_org, color_tmp(m, :), mode_display);
+            h_roi(m) = draw_vol(mask_tmp, nhood, pixdim, temp_org, color_tmp(m, :), mode_display, roi_param);
         catch
             error_str = sprintf(['----------------------------------------------------------------------\n',...
                                 'ROI labeled with number %d is too small, surface cannot be created!\n',...
@@ -154,7 +158,7 @@ lighting(draw_param.lighting_type);
 % shading(draw_param.shading_type);
             
 
-function h_brain = draw_vol(mask_tmp, nhood, pixdim, temp_org, color_tmp, mode_display)
+function h_brain = draw_vol(mask_tmp, nhood, pixdim, temp_org, color_tmp, mode_display, draw_param)
 
 V_ero = imerode(mask_tmp, nhood);
 V_edge = mask_tmp - V_ero;
@@ -188,6 +192,8 @@ if (strcmpi(mode_display, 'halves:left and right') == 0)
     set(gca, 'XLim', [-80, 80],...
              'YLim', [-100, 100],...
              'ZLim', [-75, 75]);
+    material(draw_param.material_type);
+    lighting(draw_param.lighting_type);
     hold('off');
 else
     sub_tags = {'upper_l', 'upper_r', 'lower_l', 'lower_r'};
@@ -207,6 +213,8 @@ else
         set(gca, 'XLim', [-80, 80],...
                  'YLim', [-100, 100],...
                  'ZLim', [-75, 75]);
+        material(draw_param.material_type);
+        lighting(draw_param.lighting_type);
         hold('off')
     end
 end
